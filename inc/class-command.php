@@ -69,6 +69,7 @@ class Command extends WP_CLI_Command {
 	 *
 	 * @TODO: add CLI support for constants via WPCode::$options['constants']
 	 * @TODO: make exclude arg work
+	 * @TODO: make array / multi args work better eg. via other CLI input, grep, awk etc
 	 *
 	 * @when after_wp_config_load
 	 */

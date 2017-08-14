@@ -4,54 +4,53 @@ Modern Translation File Generator for WordPress
 Previously WordPress developers needed to use `makepot.php` to generate .po files
 necessary for translation.
 
-This updated WP CLI command allows you to generate files 
+This updated WP CLI command allows you to generate different types of translation file from WP code.
 
+## Installation
 
-[--type=<string>]
-: The output file type.
----
-default: po
-options:
-  - csv
-  - csvdict
-  - json
-  - jsondict
-  - mo
-  - php
-  - po
-  - jed
-  - xliff
-  - yaml
-  - yamldict
----
+Currently you'll need to install and activate the plugin.
 
-[--locale=<string>]
-: The language the original strings are in.
----
-default: en_US
----
-*
-[--locales=<array>]
-: A list of comma separated locale codes to generate translation ready files for.
-  Alternatively can be a text file containing locales on separate lines.
----
-default: en_US
----
-*
-[--domain=<string>]
-: The text domain to extract strings for.
----
-default: 'default'
----
-*
-[--extract-from=<string>]
-: The path to extract from, defaults to the entire wp-content directory.
-  Defaults to WP_CONTENT_DIR
-*
-[--extract-to=<string>]
-: The full or relative path to a directory to save files to.
-  Defaults to a directory in languages folder named after the textdomain.
-  eg. WP_CONTENT_DIR . '/languages/default/'
-*
-[--verbose]
-: Verbose logging output.
+In your plugins directory do the following:
+
+```bash
+git clone git@github.com:roborourke/wp-l10n-gen.git 
+cd wp-l10-gen
+composer install
+wp plugin activate wp-l10n-gen # (or activate via wp-admin)
+```
+
+## Usage
+
+More docs to come soon, to see options for now run:
+
+```bash
+wp l10n generate --help
+```
+
+## Roadmap 
+
+ * Improve generated headers
+ * Add conversions between any translation file types
+ * Add po2mo shortcut command
+ * Make it work as a WP CLI package
+ * Documentation for use with JS based projects?
+
+## About
+
+Being frustrated with the existing tools for generating translation files I wondered if
+there was a better way that more closely tied in with the modern ways we interact with
+WP via the command line now.
+
+Looking to other PHP Projects and how they manage translations was a useful exercise although
+WP's translation function don't follow the usual standards. A bit of hacking later and I was
+able to get Oscar Otero's excellent [Gettext](https://github.com/oscarotero/Gettext) library
+working with WordPress code.
+
+## Contributing
+
+It's very early days yet but if anyone finds this useful and wants to contribute please go
+ahead. You'll find my outline for a roadmap above and plenty of `TODO` comments in the code.
+
+### License
+
+GPLv3+
