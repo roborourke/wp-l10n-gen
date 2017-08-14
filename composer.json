@@ -1,0 +1,15 @@
+{
+    "name": "roborourke/wp-l10n-gen",
+    "description": "Modern translation file generator for WordPress",
+    "type": "project",
+    "require": {
+        "gettext/gettext": "^4.4"
+    },
+    "license": "GPL-3.0",
+    "authors": [
+        {
+            "name": "Robert O'Rourke",
+            "email": "robert@o-rourke.org"
+        }
+    ]
+}
