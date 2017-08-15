@@ -19,19 +19,27 @@ composer install
 wp plugin activate wp-l10n-gen # (or activate via wp-admin)
 ```
 
+Or using composer:
+
+```bash
+composer require roborourke/wp-l10n-gen
+```
+
 ## Usage
 
 More docs to come soon, to see options for now run:
 
 ```bash
 wp l10n generate --help
+wp l10n convert --help
+wp l10n po2mo --help
 ```
 
 ## Roadmap 
 
  * Improve generated headers
- * Add conversions between any translation file types
- * Add po2mo shortcut command
+ * ~Add conversions between any translation file types~
+ * ~Add po2mo shortcut command~
  * Make it work as a WP CLI package
  * Documentation for use with JS based projects?
 
