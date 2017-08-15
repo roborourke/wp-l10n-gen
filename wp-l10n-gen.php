@@ -16,6 +16,7 @@ use WP_CLI;
 
 // Composer deps.
 require_once 'vendor/autoload.php';
+require_once 'inc/class-multi-filter.php';
 require_once 'inc/class-wpfunctionsscanner.php';
 require_once 'inc/class-wpcode-extractor.php';
 require_once 'inc/class-command.php';

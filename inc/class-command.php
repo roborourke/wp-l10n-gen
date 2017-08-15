@@ -1,9 +1,8 @@
 <?php
 /**
- * WP CLI command to generate files.
+ * WP CLI command to generate and convert translation files.
  *
- * @TODO: add transform command, one file type to another.
- * @TODO: add po2mo shortcut
+ * @TODO: add tests
  */
 
 namespace WP_L10N_Gen;
@@ -64,12 +63,15 @@ class Command extends WP_CLI_Command {
 	 *   Defaults to a directory in languages folder named after the textdomain.
 	 *   eg. WP_CONTENT_DIR . '/languages/default/'
 	 *
+	 * [--prefix=<string>]
+	 * : Optional prefix to append to files eg. prefix-en_US.po
+	 *
 	 * [--verbose]
 	 * : Verbose logging output.
 	 *
-	 * @TODO: add CLI support for constants via WPCode::$options['constants']
-	 * @TODO: make exclude arg work
-	 * @TODO: make array / multi args work better eg. via other CLI input, grep, awk etc
+	 * @TODO : add CLI support for constants via WPCode::$options['constants']
+	 * @TODO : make exclude arg work
+	 * @TODO : make array / multi args work better eg. via other CLI input, grep, awk etc
 	 *
 	 * @when after_wp_config_load
 	 */
@@ -86,6 +88,7 @@ class Command extends WP_CLI_Command {
 			'exclude'      => 'vendor,node_modules',
 			'extract-from' => $extract_from,
 			'extract-to'   => $extract_to,
+			'prefix'       => '',
 		] );
 
 		// If extract-to is default then swap out domain.
@@ -111,7 +114,7 @@ class Command extends WP_CLI_Command {
 			// Show progress.
 			$progress = make_progress_bar( sprintf( 'Extracting strings from %s', $path ), iterator_count( $php_files ) );
 
-			foreach ( $php_files as $file_path => $file ) {
+			foreach ( $php_files as $file_path => $file_info ) {
 				if ( isset( $assoc_args['verbose'] ) ) {
 					WP_CLI::log( sprintf( 'Extracting strings from %s', $file_path ) );
 				}
@@ -138,61 +141,252 @@ class Command extends WP_CLI_Command {
 			$translations->setLanguage( $locale );
 
 			// Get the file name.
-			$save_to = "{$assoc_args['extract-to']}/{$locale}";
+			$path = trailingslashit( $assoc_args['extract-to'] ) . $assoc_args['prefix'] . $locale;
 
 			// Allow generating multiple types at a time.
 			$types = explode( ',', $assoc_args['type'] );
 
-			// File gen args.
-			$file_args = [
-				'includeHeaders' => true,
-			];
-
 			foreach ( $types as $type ) {
-				switch ( $type ) {
-					case 'po':
-						$translations->toPoFile( "{$save_to}.po", $file_args );
-						break;
-					case 'mo':
-						$translations->toMoFile( "{$save_to}.mo", $file_args );
-						break;
-					case 'php':
-						$translations->toPhpArrayFile( "{$save_to}.php", $file_args );
-						break;
-					case 'csv':
-						$translations->toCsvFile( "{$save_to}.csv", $file_args );
-						break;
-					case 'csvdict':
-						$translations->toCsvDictionaryFile( "{$save_to}.csv", $file_args );
-						break;
-					case 'json':
-						$translations->toJsonFile( "{$save_to}.json", $file_args );
-						break;
-					case 'jsondict':
-						$translations->toJsonDictionaryFile( "{$save_to}.json", $file_args );
-						break;
-					case 'jed':
-						$translations->toJedFile( "{$save_to}.jed", $file_args );
-						break;
-					case 'xliff':
-						$translations->toXliffFile( "{$save_to}.xliff", $file_args );
-						break;
-					case 'yaml':
-						$translations->toYamlFile( "{$save_to}.yml", $file_args );
-						break;
-					case 'yamldict':
-						$translations->toYamlDictionaryFile( "{$save_to}.yml", $file_args );
-						break;
-				}
-
-				WP_CLI::success( sprintf(
-					'Saved %s file for %s: %s',
-					$type,
-					$locale,
-					str_replace( [ 'dict', 'yaml' ], [ '', 'yml' ], "{$save_to}.{$type}" )
-				) );
+				$this->to( $translations, $type, $path );
 			}
 		}
+	}
+
+	/**
+	 * Convert translation files from one format to another.
+	 *
+	 * <file>
+	 * : The file or directory of files to convert, makes a best guess as to
+	 *   the type based on the file name.
+	 *   When <file> is a directory --input-type is required.
+	 *
+	 * <to-type>
+	 * : The type of file to convert to.
+	 * ---
+	 * options:
+	 *   - csv
+	 *   - csvdict
+	 *   - json
+	 *   - jsondict
+	 *   - mo
+	 *   - php
+	 *   - po
+	 *   - jed
+	 *   - xliff
+	 *   - yaml
+	 *   - yamldict
+	 * ---
+	 *
+	 * [--input-type=<string>]
+	 * : Optionally specify the input file type. Required if <file> is a directory.
+	 *
+	 * [--pattern=<string>]
+	 * : An optional regular expression to use with a directory to narrow down which
+	 *   files are converted.
+	 *
+	 * @param array $args
+	 * @param array $assoc_args
+	 */
+	public function convert( $args, $assoc_args = [] ) {
+
+		// Get positional args.
+		list( $file, $to_type ) = $args;
+
+		$input_type = false;
+
+		if ( ! is_dir( $file ) ) {
+			// Get input type.
+			$input_type = pathinfo( $file, PATHINFO_EXTENSION );
+		}
+
+		// Allow specifying input type for dict types.
+		if ( isset( $assoc_args['input-type'] ) ) {
+			$input_type = $assoc_args['input-type'];
+		}
+
+		// Check we know our source type.
+		if ( ! $input_type ) {
+			WP_CLI::error( '--input-type argument is missing!' );
+
+			return;
+		}
+
+		// Normalise file extension for regex.
+		$file_extension = str_replace( [ 'dict', 'yaml' ], [ '', 'yml' ], $input_type );
+
+		// Files iterator.
+		try {
+			// Handle directories.
+			if ( is_dir( $file ) ) {
+				$files_iterator = new \FilesystemIterator( $file );
+
+				// Filter results.
+				if ( isset( $assoc_args['pattern'] ) ) {
+					$files_by_type = new MultiFilter( $files_iterator, [
+						"/\.{$file_extension}$/i",
+						$assoc_args['pattern'],
+					] );
+				} else {
+					$files_by_type = new MultiFilter( $files_iterator, "/\.{$file_extension}$/i" );
+				}
+			} else {
+				$files_by_type = [
+					$file => $file,
+				];
+			}
+
+			WP_CLI::line( sprintf( 'Converting: %s -> %s', $input_type, $to_type ) );
+
+			foreach ( $files_by_type as $file_path => $file_info ) {
+				$translations = $this->from( $file_path, $input_type );
+
+				if ( ! $translations ) {
+					WP_CLI::error( 'Could not get translations, you may need to specify the --input-type' );
+					continue;
+				}
+
+				$this->to( $translations, $to_type, $file_path );
+			}
+		} catch ( \Exception $exception ) {
+			WP_CLI::error( 'There was an error: ' . $exception->getMessage() );
+		}
+	}
+
+	/**
+	 * Shortcut for po to mo conversion.
+	 *
+	 * <file>
+	 * : .po file to convert or directory containing .po files.
+	 *
+	 * [--pattern=<string>]
+	 * : An optional regular expression to use with a directory to narrow down which
+	 *   files are converted.
+	 *
+	 * @param array $args
+	 * @param array $assoc_args
+	 */
+	public function po2mo( $args, $assoc_args ) {
+		$args[]                   = 'mo';
+		$assoc_args['input-type'] = 'po';
+		$this->convert( $args, $assoc_args );
+	}
+
+	/**
+	 * Get Translations object from a file.
+	 *
+	 * @param string $file
+	 * @param string $type
+	 * @return false|Translations
+	 */
+	protected function from( string $file, string $type = '' ) {
+		$translations = false;
+
+		// Determine type from extension.
+		if ( empty( $type ) ) {
+			$type = pathinfo( $file, PATHINFO_EXTENSION );
+		}
+
+		switch ( $type ) {
+			case 'po':
+				$translations = Translations::fromPoFile( $file );
+				break;
+			case 'mo':
+				$translations = Translations::fromMoFile( $file );
+				break;
+			case 'php':
+				$translations = Translations::fromPhpArrayFile( $file );
+				break;
+			case 'csv':
+				$translations = Translations::fromCsvFile( $file );
+				break;
+			case 'csvdict':
+				$translations = Translations::fromCsvDictionaryFile( $file );
+				break;
+			case 'json':
+				$translations = Translations::fromJsonFile( $file );
+				break;
+			case 'jsondict':
+				$translations = Translations::fromJsonDictionaryFile( $file );
+				break;
+			case 'jed':
+				$translations = Translations::fromJedFile( $file );
+				break;
+			case 'xliff':
+				$translations = Translations::fromXliffFile( $file );
+				break;
+			case 'yml':
+			case 'yaml':
+				$translations = Translations::fromYamlFile( $file );
+				break;
+			case 'yamldict':
+				$translations = Translations::fromYamlDictionaryFile( $file );
+				break;
+		}
+
+		return $translations;
+	}
+
+	/**
+	 * Save translations object to a type.
+	 *
+	 * @param \Gettext\Translations $translations
+	 * @param string                $type
+	 * @param string                $file
+	 * @param array                 $file_args
+	 * @return \Gettext\Translations
+	 */
+	protected function to( Translations $translations, string $type, string $file, $file_args = [
+		'includeHeaders' => true,
+	] ) {
+		// Remove extension.
+		$file = str_replace( '.' . pathinfo( $file, PATHINFO_EXTENSION ), '', $file );
+
+		switch ( $type ) {
+			case 'po':
+				$translations->toPoFile( "{$file}.po", $file_args );
+				break;
+			case 'mo':
+				$translations->toMoFile( "{$file}.mo", $file_args );
+				break;
+			case 'php':
+				$translations->toPhpArrayFile( "{$file}.php", $file_args );
+				break;
+			case 'csv':
+				$translations->toCsvFile( "{$file}.csv", $file_args );
+				break;
+			case 'csvdict':
+				$translations->toCsvDictionaryFile( "{$file}.csv", $file_args );
+				$type = 'csv';
+				break;
+			case 'json':
+				$translations->toJsonFile( "{$file}.json", $file_args );
+				break;
+			case 'jsondict':
+				$translations->toJsonDictionaryFile( "{$file}.json", $file_args );
+				$type = 'json';
+				break;
+			case 'jed':
+				$translations->toJedFile( "{$file}.jed", $file_args );
+				break;
+			case 'xliff':
+				$translations->toXliffFile( "{$file}.xliff", $file_args );
+				break;
+			case 'yaml':
+				$translations->toYamlFile( "{$file}.yml", $file_args );
+				$type = 'yml';
+				break;
+			case 'yamldict':
+				$translations->toYamlDictionaryFile( "{$file}.yml", $file_args );
+				$type = 'yml';
+				break;
+		}
+
+		WP_CLI::success( sprintf(
+			'Saved: %s',
+			"{$file}.{$type}"
+		) );
+
+		return $translations;
 	}
 
 }
