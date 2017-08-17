@@ -1,15 +1,21 @@
 {
     "name": "roborourke/wp-l10n-gen",
-    "description": "Modern translation file generator for WordPress",
-    "type": "project",
+    "description": "Modern translation file generation and conversion for WordPress, no more makepot.php!",
+    "type": "wp-cli-package",
+    "homepage": "https://github.com/roborourke/wp-l10n-gen",
     "require": {
-        "gettext/gettext": "^4.4"
+        "gettext/gettext": "^4.4",
+        "php": ">=5.4"
     },
     "license": "GPL-3.0",
     "authors": [
         {
             "name": "Robert O'Rourke",
-            "email": "robert@o-rourke.org"
+            "email": "robert@o-rourke.org",
+            "homepage": "https://xn--rb-fka.co"
         }
-    ]
+    ],
+    "autoload": {
+        "files": [ "wp-l10n-gen.php" ]
+    }
 }

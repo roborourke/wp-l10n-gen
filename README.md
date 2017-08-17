@@ -1,28 +1,47 @@
 Modern Translation File Generator for WordPress
 ===============================================
 
-Previously WordPress developers needed to use `makepot.php` to generate .po files
+Previously WordPress developers needed to use `makepot.php` to generate the .po files
 necessary for translation.
 
-This updated WP CLI command allows you to generate different types of translation file from WP code.
+This WP CLI command allows you to generate different types of translation file from WP
+code and also convert between types easily.
+
+Supported translation file types are:
+
+* CSV
+* CSV Dictionary (no plural support)
+* JSON
+* JSON Dictionary (no plural support)
+* mo
+* PHP Array
+* po
+* jed
+* xliff
+* YAML
+* YAML Dictionary (no plural support) 
 
 ## Installation
 
-Currently you'll need to install and activate the plugin.
+You can install the command as WP CLI package (Recommended):
 
-In your plugins directory do the following:
+```bash
+wp package install roborourke/wp-l10n-gen
+```
+
+Using composer:
+
+```bash
+composer require roborourke/wp-l10n-gen
+```
+
+As a plugin:
 
 ```bash
 git clone git@github.com:roborourke/wp-l10n-gen.git 
 cd wp-l10-gen
 composer install
 wp plugin activate wp-l10n-gen # (or activate via wp-admin)
-```
-
-Or using composer:
-
-```bash
-composer require roborourke/wp-l10n-gen
 ```
 
 ## Usage
@@ -38,9 +57,6 @@ wp l10n po2mo --help
 ## Roadmap 
 
  * Improve generated headers
- * ~Add conversions between any translation file types~
- * ~Add po2mo shortcut command~
- * Make it work as a WP CLI package
  * Documentation for use with JS based projects?
 
 ## About
