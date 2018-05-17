@@ -80,7 +80,7 @@ class Command extends WP_CLI_Command {
 		$extract_from = WP_CONTENT_DIR;
 		$extract_to   = WP_CONTENT_DIR . '/languages/__domain__';
 
-		$assoc_args = wp_parse_args( $assoc_args, [
+		$assoc_args = array_merge( [
 			'type'         => 'po',
 			'locale'       => 'en_US',
 			'locales'      => 'en_US',
@@ -89,7 +89,7 @@ class Command extends WP_CLI_Command {
 			'extract-from' => $extract_from,
 			'extract-to'   => $extract_to,
 			'prefix'       => '',
-		] );
+		], $assoc_args );
 
 		// If extract-to is default then swap out domain.
 		if ( $extract_to === $assoc_args['extract-to'] ) {
