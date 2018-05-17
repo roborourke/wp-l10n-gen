@@ -14,8 +14,12 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 
 use WP_CLI;
 
-// Composer deps.
-require_once 'vendor/autoload.php';
+// Load autoloader if composer install run locally.
+if ( file_exists( 'vendor/autoload.php' ) {
+	require_once 'vendor/autoload.php';
+}
+
+// Command classes.
 require_once 'inc/class-multi-filter.php';
 require_once 'inc/class-wpfunctionsscanner.php';
 require_once 'inc/class-wpcode-extractor.php';
