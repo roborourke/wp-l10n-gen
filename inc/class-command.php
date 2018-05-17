@@ -141,7 +141,7 @@ class Command extends WP_CLI_Command {
 			$translations->setLanguage( $locale );
 
 			// Get the file name.
-			$path = trailingslashit( $assoc_args['extract-to'] ) . $assoc_args['prefix'] . $locale;
+			$path = rtrim( $assoc_args['extract-to'], DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . $assoc_args['prefix'] . $locale;
 
 			// Allow generating multiple types at a time.
 			$types = explode( ',', $assoc_args['type'] );
