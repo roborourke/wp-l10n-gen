@@ -15,7 +15,7 @@ if ( ! class_exists( 'WP_CLI' ) ) {
 use WP_CLI;
 
 // Load autoloader if composer install run locally.
-if ( file_exists( 'vendor/autoload.php' ) {
+if ( file_exists( 'vendor/autoload.php' ) ) {
 	require_once 'vendor/autoload.php';
 }
 
