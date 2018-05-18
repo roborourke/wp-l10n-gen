@@ -49,7 +49,7 @@ class Command extends WP_CLI_Command {
 	 * ---
 	 *
 	 * [--domain=<string>]
-	 * : The text domain to extract strings for.
+	 * : The text domain to extract strings for. Prepended to translation files.
 	 * ---
 	 * default: 'default'
 	 * ---
@@ -61,10 +61,7 @@ class Command extends WP_CLI_Command {
 	 * [--extract-to=<string>]
 	 * : The full or relative path to a directory to save files to.
 	 *   Defaults to a directory in languages folder named after the textdomain.
-	 *   eg. WP_CONTENT_DIR . '/languages/default/'
-	 *
-	 * [--prefix=<string>]
-	 * : Optional prefix to append to files eg. prefix-en_US.po
+	 *   eg. WP_CONTENT_DIR . '/languages/plugins/'
 	 *
 	 * [--verbose]
 	 * : Verbose logging output.
@@ -78,7 +75,7 @@ class Command extends WP_CLI_Command {
 	public function generate( $args, $assoc_args = [] ) {
 
 		$extract_from = WP_CONTENT_DIR;
-		$extract_to   = WP_CONTENT_DIR . '/languages/__domain__';
+		$extract_to   = WP_CONTENT_DIR . '/languages/plugins';
 
 		$assoc_args = array_merge( [
 			'type'         => 'po',
@@ -88,13 +85,7 @@ class Command extends WP_CLI_Command {
 			'exclude'      => 'vendor,node_modules',
 			'extract-from' => $extract_from,
 			'extract-to'   => $extract_to,
-			'prefix'       => '',
 		], $assoc_args );
-
-		// If extract-to is default then swap out domain.
-		if ( $extract_to === $assoc_args['extract-to'] ) {
-			$assoc_args['extract-to'] = str_replace( '__domain__', $assoc_args['domain'], $assoc_args['extract-to'] );
-		}
 
 		// Create initial result set to merge into.
 		$translations = new Translations();
@@ -141,7 +132,7 @@ class Command extends WP_CLI_Command {
 			$translations->setLanguage( $locale );
 
 			// Get the file name.
-			$path = rtrim( $assoc_args['extract-to'], DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . $assoc_args['prefix'] . $locale;
+			$path = rtrim( $assoc_args['extract-to'], DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . $assoc_args['domain'] . '-' . $locale;
 
 			// Allow generating multiple types at a time.
 			$types = explode( ',', $assoc_args['type'] );
@@ -182,7 +173,7 @@ class Command extends WP_CLI_Command {
 	 *
 	 * [--pattern=<string>]
 	 * : An optional regular expression to use with a directory to narrow down which
-	 *   files are converted.
+	 *   files are converted. Use this to specify a textdomain for example.
 	 *
 	 * @param array $args
 	 * @param array $assoc_args
