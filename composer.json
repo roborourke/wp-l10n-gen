@@ -5,7 +5,7 @@
     "homepage": "https://github.com/roborourke/wp-l10n-gen",
     "require": {
         "gettext/gettext": "dev-master",
-        "php": ">=5.4"
+        "php": ">=7.0"
     },
     "license": "GPL-3.0",
     "authors": [

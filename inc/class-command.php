@@ -49,7 +49,7 @@ class Command extends WP_CLI_Command {
 	 * ---
 	 *
 	 * [--domain=<string>]
-	 * : The text domain to extract strings for. Prepended to translation files.
+	 * : The text domain to extract strings for. Prepended to translation file names.
 	 * ---
 	 * default: 'default'
 	 * ---
@@ -98,18 +98,26 @@ class Command extends WP_CLI_Command {
 		WP_CLI::log( 'Preparing to parse files...' );
 
 		foreach ( $paths as $path ) {
-			$directory = new \RecursiveDirectoryIterator( $path );
-			$iterator  = new \RecursiveIteratorIterator( $directory );
-			$php_files = new \RegexIterator( $iterator, '/^.+\.php\d?$/i', \RecursiveRegexIterator::GET_MATCH );
+			$directory  = new \RecursiveDirectoryIterator( $path );
+			$iterator   = new \RecursiveIteratorIterator( $directory );
+			$code_files = new \RegexIterator( $iterator, '/^.+(\.php\d|\.jsx?|\.twig)?$/i', \RecursiveRegexIterator::GET_MATCH );
 
 			// Show progress.
-			$progress = make_progress_bar( sprintf( 'Extracting strings from %s', $path ), iterator_count( $php_files ) );
+			$progress = make_progress_bar( sprintf( 'Extracting strings from %s', $path ), iterator_count( $code_files ) );
 
-			foreach ( $php_files as $file_path => $file_info ) {
+			foreach ( $code_files as $file_path => $file_info ) {
 				if ( isset( $assoc_args['verbose'] ) ) {
 					WP_CLI::log( sprintf( 'Extracting strings from %s', $file_path ) );
 				}
-				$translations->addFromWPCodeFile( $file_path );
+				switch ( pathinfo( $file_path, PATHINFO_EXTENSION ) ) {
+					case 'js':
+					case 'jsx':
+						$translations->addFromWPJsCodeFile( $file_path );
+						break;
+					default:
+						$translations->addFromWPCodeFile( $file_path );
+						break;
+				}
 				$progress->tick();
 			}
 
@@ -203,7 +211,7 @@ class Command extends WP_CLI_Command {
 		}
 
 		// Normalise file extension for regex.
-		$file_extension = str_replace( [ 'dict', 'yaml' ], [ '', 'yml' ], $input_type );
+		$file_extension = str_replace( [ 'dict', 'yaml', 'jed' ], [ '', 'yml', 'json' ], $input_type );
 
 		// Files iterator.
 		try {
@@ -269,7 +277,7 @@ class Command extends WP_CLI_Command {
 	 * @param string $type
 	 * @return false|Translations
 	 */
-	protected function from( string $file, string $type = '' ) {
+	protected function from( string $file, string $type ) {
 		$translations = false;
 
 		// Determine type from extension.
@@ -357,7 +365,7 @@ class Command extends WP_CLI_Command {
 				$type = 'json';
 				break;
 			case 'jed':
-				$translations->toJedFile( "{$file}.jed", $file_args );
+				$translations->toJedFile( "{$file}.json", $file_args );
 				break;
 			case 'xliff':
 				$translations->toXliffFile( "{$file}.xliff", $file_args );
