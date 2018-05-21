@@ -1,23 +1,23 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6238171de3694b7edf025e966852003a",
+    "content-hash": "c103dc252ffd5e0f2b6aec312cc0924e",
     "packages": [
         {
             "name": "gettext/gettext",
-            "version": "v4.4.3",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/oscarotero/Gettext.git",
-                "reference": "4f57f004635cc6311a20815ebfdc0757cb337113"
+                "reference": "f1b2a7f74f0ee8a6c0f615b56b549bbf673e3b97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/4f57f004635cc6311a20815ebfdc0757cb337113",
-                "reference": "4f57f004635cc6311a20815ebfdc0757cb337113",
+                "url": "https://api.github.com/repos/oscarotero/Gettext/zipball/f1b2a7f74f0ee8a6c0f615b56b549bbf673e3b97",
+                "reference": "f1b2a7f74f0ee8a6c0f615b56b549bbf673e3b97",
                 "shasum": ""
             },
             "require": {
@@ -26,7 +26,7 @@
             },
             "require-dev": {
                 "illuminate/view": "*",
-                "phpunit/phpunit": "^4.8|^5.7",
+                "phpunit/phpunit": "^4.8|^5.7|^6.5",
                 "squizlabs/php_codesniffer": "^3.0",
                 "symfony/yaml": "~2",
                 "twig/extensions": "*",
@@ -66,7 +66,7 @@
                 "po",
                 "translation"
             ],
-            "time": "2017-08-09T16:59:46+00:00"
+            "time": "2018-05-16T10:56:56+00:00"
         },
         {
             "name": "gettext/languages",
@@ -133,7 +133,9 @@
     "packages-dev": [],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "gettext/gettext": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
