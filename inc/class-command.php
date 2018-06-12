@@ -334,39 +334,51 @@ class Command extends WP_CLI_Command {
 
 		switch ( $type ) {
 			case 'po':
+				$this->merge( $translations, $type, "{$file}.po" );
 				$translations->toPoFile( "{$file}.po", $file_args );
 				break;
 			case 'mo':
+				$this->merge( $translations, $type, "{$file}.mo" );
 				$translations->toMoFile( "{$file}.mo", $file_args );
 				break;
 			case 'php':
+				$this->merge( $translations, $type, "{$file}.php" );
 				$translations->toPhpArrayFile( "{$file}.php", $file_args );
 				break;
 			case 'csv':
+				$this->merge( $translations, $type, "{$file}.csv" );
 				$translations->toCsvFile( "{$file}.csv", $file_args );
 				break;
 			case 'csvdict':
+				$this->merge( $translations, $type, "{$file}.csv" );
 				$translations->toCsvDictionaryFile( "{$file}.csv", $file_args );
 				$type = 'csv';
 				break;
 			case 'json':
+				$this->merge( $translations, $type, "{$file}.json" );
 				$translations->toJsonFile( "{$file}.json", $file_args );
 				break;
 			case 'jsondict':
+				$this->merge( $translations, $type, "{$file}.json" );
 				$translations->toJsonDictionaryFile( "{$file}.json", $file_args );
 				$type = 'json';
 				break;
 			case 'jed':
-				$translations->toJedFile( "{$file}.jed", $file_args );
+				$this->merge( $translations, $type, "{$file}.json" );
+				$translations->toJedFile( "{$file}.json", $file_args );
+				$type = 'json';
 				break;
 			case 'xliff':
+				$this->merge( $translations, $type, "{$file}.xliff" );
 				$translations->toXliffFile( "{$file}.xliff", $file_args );
 				break;
 			case 'yaml':
+				$this->merge( $translations, $type, "{$file}.yml" );
 				$translations->toYamlFile( "{$file}.yml", $file_args );
 				$type = 'yml';
 				break;
 			case 'yamldict':
+				$this->merge( $translations, $type, "{$file}.yml" );
 				$translations->toYamlDictionaryFile( "{$file}.yml", $file_args );
 				$type = 'yml';
 				break;
@@ -378,6 +390,22 @@ class Command extends WP_CLI_Command {
 		) );
 
 		return $translations;
+	}
+
+	/**
+	 * Merge an existing file with the passed Translations object.
+	 *
+	 * @param Translations $translations
+	 * @param string $type
+	 * @param string $file
+	 */
+	protected function merge( Translations $translations, $type, $file ) {
+		if ( ! file_exists( $file ) ) {
+			return;
+		}
+
+		$existing = $this->from( $file, $type );
+		$translations->mergeWith( $existing );
 	}
 
 }
