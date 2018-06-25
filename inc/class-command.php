@@ -20,7 +20,7 @@ class Command extends WP_CLI_Command {
 	 * [--type=<string>]
 	 * : The output file type.
 	 * ---
-	 * default: po
+	 * default: pot
 	 * options:
 	 *   - csv
 	 *   - csvdict
@@ -29,6 +29,7 @@ class Command extends WP_CLI_Command {
 	 *   - mo
 	 *   - php
 	 *   - po
+	 *   - pot
 	 *   - jed
 	 *   - xliff
 	 *   - yaml
@@ -44,9 +45,6 @@ class Command extends WP_CLI_Command {
 	 * [--locales=<array>]
 	 * : A list of comma separated locale codes to generate translation ready files for.
 	 *   Alternatively can be a text file containing locales on separate lines.
-	 * ---
-	 * default: en_US
-	 * ---
 	 *
 	 * [--domain=<string>]
 	 * : The text domain to extract strings for. Prepended to translation files.
@@ -78,9 +76,9 @@ class Command extends WP_CLI_Command {
 		$extract_to   = WP_CONTENT_DIR . '/languages/plugins';
 
 		$assoc_args = array_merge( [
-			'type'         => 'po',
+			'type'         => 'pot',
 			'locale'       => 'en_US',
-			'locales'      => 'en_US',
+			'locales'      => '',
 			'domain'       => 'default',
 			'exclude'      => 'vendor,node_modules',
 			'extract-from' => $extract_from,
@@ -121,25 +119,29 @@ class Command extends WP_CLI_Command {
 			mkdir( $assoc_args['extract-to'], 0755, true );
 		}
 
-		// Add default language to locales.
+		// Sanitise locales.
 		$locales = array_map( 'trim', explode( ',', $assoc_args['locales'] ) );
-		$locales = array_merge( $locales, (array) $assoc_args['locale'] );
 		$locales = array_unique( $locales );
+		$locales = array_filter( $locales );
+
+		// Output .pot file, no locales needed and translations not present in this file type.
+		if ( $assoc_args['type'] === 'pot' ) {
+			$this->to( $translations, 'pot', rtrim( $assoc_args['extract-to'], DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . $assoc_args['domain'] );
+			return;
+		}
 
 		foreach ( $locales as $locale ) {
-
-			// Update language header.
-			$translations->setLanguage( $locale );
+			// New translations object per locale.
+			$locale_translations = new Translations();
+			$locale_translations->setLanguage( $locale );
+			$locale_translations->setDomain( $assoc_args['domain'] );
+			$locale_translations->mergeWith( $translations );
 
 			// Get the file name.
 			$path = rtrim( $assoc_args['extract-to'], DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . $assoc_args['domain'] . '-' . $locale;
 
-			// Allow generating multiple types at a time.
-			$types = explode( ',', $assoc_args['type'] );
-
-			foreach ( $types as $type ) {
-				$this->to( $translations, $type, $path );
-			}
+			// Create file for locale and merge existing file.
+			$this->to( $locale_translations, $assoc_args['type'], $path );
 		}
 	}
 
@@ -162,6 +164,7 @@ class Command extends WP_CLI_Command {
 	 *   - mo
 	 *   - php
 	 *   - po
+	 *   - pot
 	 *   - jed
 	 *   - xliff
 	 *   - yaml
@@ -177,6 +180,8 @@ class Command extends WP_CLI_Command {
 	 *
 	 * @param array $args
 	 * @param array $assoc_args
+	 *
+	 * @when after_wp_config_load
 	 */
 	public function convert( $args, $assoc_args = [] ) {
 
@@ -255,6 +260,8 @@ class Command extends WP_CLI_Command {
 	 *
 	 * @param array $args
 	 * @param array $assoc_args
+	 *
+	 * @when after_wp_config_load
 	 */
 	public function po2mo( $args, $assoc_args ) {
 		$args[]                   = 'mo';
@@ -279,6 +286,7 @@ class Command extends WP_CLI_Command {
 
 		switch ( $type ) {
 			case 'po':
+			case 'pot':
 				$translations = Translations::fromPoFile( $file );
 				break;
 			case 'mo':
@@ -331,8 +339,11 @@ class Command extends WP_CLI_Command {
 	] ) {
 		// Remove extension.
 		$file = str_replace( '.' . pathinfo( $file, PATHINFO_EXTENSION ), '', $file );
-
 		switch ( $type ) {
+			case 'pot':
+				// @TODO empty out any translated strings.
+				$translations->toPoFile( "{$file}.pot", $file_args );
+				break;
 			case 'po':
 				$this->merge( $translations, $type, "{$file}.po" );
 				$translations->toPoFile( "{$file}.po", $file_args );
