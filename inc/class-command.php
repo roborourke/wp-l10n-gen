@@ -107,7 +107,13 @@ class Command extends WP_CLI_Command {
 				if ( isset( $assoc_args['verbose'] ) ) {
 					WP_CLI::log( sprintf( 'Extracting strings from %s', $file_path ) );
 				}
-				$translations->addFromWPCodeFile( $file_path );
+
+				if (stristr($file_path, '.blade.php') !== false) {
+					$translations->addFromWPCodeBladeFile( $file_path );
+				} else {
+					$translations->addFromWPCodeFile( $file_path );
+				}
+				
 				$progress->tick();
 			}
 

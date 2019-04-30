@@ -23,6 +23,7 @@ if ( file_exists( 'vendor/autoload.php' ) ) {
 require_once 'inc/class-multi-filter.php';
 require_once 'inc/class-wpfunctionsscanner.php';
 require_once 'inc/class-wpcode-extractor.php';
+require_once 'inc/class-wpcodeblade-extractor.php';
 require_once 'inc/class-command.php';
 
 WP_CLI::add_command( 'l10n', __NAMESPACE__ . '\Command' );
