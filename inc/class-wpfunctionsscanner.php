@@ -14,7 +14,7 @@ class WPFunctionsScanner extends PhpFunctionsScanner {
 	 * @param array        $options      The extractor options
 	 * @throws Exception
 	 */
-	public function saveGettextFunctions( Translations $translations, array $options ) {
+	public function saveGettextFunctions( $translations, array $options ) {
 		$functions = $options['functions'];
 		$file      = $options['file'];
 
